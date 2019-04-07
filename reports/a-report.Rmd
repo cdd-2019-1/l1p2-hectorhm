@@ -13,5 +13,69 @@ theme_set(theme_bw())
 ```
 
 ```{r read}
-atividade = read_projectdata()
+atividade = read_projectdata
 ```
+```{r}
+validos = atividade %>%
+          filter(!is.na(twitter),
+                 !is.na(segue),
+                 !is.na(seguidores))
+```
+O dataset utilizado será o válidos que exclui os parlamentares que não possuem Twitter, ou possuem conta mas nunca a utilizara, ou seja não possuem seguidores e nem seguem alguém. Foram excluídos 59 parlamentares que não possuem conta no Twitter, e o número dos que não faz uso da conta foi 179, resultando num total de 238 exclusões.
+
+#Quais os congressistas com um engajamento proporcional ao seu número de seguidores ?
+Existem parlamentares que possuem muitos seguidores e existem aqueles que possuem um engajamento total elevado. Será que é possível perceber algum tipo de correlação entre esses tópicos ? 
+
+```{r}
+validos %>%
+  ggplot(title="Número",aes(x = seguidores/1000, y =engaj_total/1000, colour=seguidores)) +
+  geom_text(check_overlap = TRUE,aes(label =ifelse(seguidores>1000,as.character(nome_eleitoral),''))
+            ,hjust=.1,vjust=0.4)
+
+validos %>%
+  ggplot(aes(x = seguidores/1000, y =engaj_total_proprio/1000, colour=seguidores)) +
+    geom_text(check_overlap = TRUE,aes(label =ifelse(seguidores>1000,as.character(nome_eleitoral),''))
+              ,hjust=.1,vjust=0.4)
+
+                 
+```
+Para efeitos de visualização o número de seguidores e do engjamento foi dividido por 100, ou seja, no gŕáfico onde é possível visualizar 1000 significa que o valor real desse número é 1 milhão.Então é possível perceber que deputados com um número de seguidores próximo a 100 mil possuem um engajamento total próximo ao seu número de seguidores.
+O congressista com o maior valor de engajamento total em relação ao seu número de seguidores é a deputada Carla Zambelli(PSL-SP). Já o parlementar que possui a menor proporção de engajamento total por seguidor é o senador Romário Fária(PODEMOS-RJ).
+
+#Qual o deputado com mais seguidores com maior enjamento mediano ? E engajamento mediano propŕio ?
+
+```{r}
+validos %>%
+  ggplot(aes(x = seguidores/1000, y =engaj_mediano/1000, colour=seguidores)) +
+    geom_text(check_overlap = TRUE,aes(label =ifelse(seguidores>1000,as.character(nome_eleitoral),''))
+              ,hjust=.1,vjust=0.4)
+
+validos %>%
+  ggplot(aes(x = seguidores/1000, y =engaj_mediano_proprio/1000, colour=seguidores)) +
+    geom_text(check_overlap = TRUE,aes(label =ifelse(seguidores>1000,as.character(nome_eleitoral),''))
+              ,hjust=.1,vjust=0.4)
+  
+```
+Se levarmos em consideração o engajamento total próprio o panaroma geral não sofre grande alteração. A deputada Carla Zambelli continua no topo, mas se levaramos em consideração o engajamento mediano percebe-se que a deputada não configura no gráfico, o que prova que realmente a deputada é um outlier.
+Considerando o mesmo engajamento mediano, percebe-se que o senador Flávio Bolsonaro(PSL-RJ), 
+Já o maior engajamento media próprio 
+
+#A quais estados pertencem os congressistas com os maiores engajamentos nos seus tweets ?
+```{r}
+validos %>%
+  group_by(UF) %>%
+  summarise(mediana_seguidores = median(engaj_total),
+            parlamentares = n()) %>%
+  ggplot(aes(
+    x = reorder(UF, mediana_seguidores),
+    y = mediana_seguidores,
+    size = parlamentares
+  )) +
+  geom_point(alpha = .8) +
+  coord_flip() +
+  labs(x = "UF do parlamentar",
+       y = "Mediana de engajamento total dos parlamentares", 
+       size = "Ativos no twitter")
+```
+
+
