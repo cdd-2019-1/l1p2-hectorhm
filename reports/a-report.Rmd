@@ -13,9 +13,9 @@ theme_set(theme_bw())
 ```
 
 ```{r read}
-atividade = read_projectdata
-```
-```{r}
+atividade = read_projectdata()
+
+
 validos = atividade %>%
           filter(!is.na(twitter),
                  !is.na(segue),
@@ -32,15 +32,20 @@ validos %>%
   geom_text(check_overlap = TRUE,aes(label =ifelse(seguidores>1000,as.character(nome_eleitoral),''))
             ,hjust=.1,vjust=0.4)
 
+```
+Para efeitos de visualização o número de seguidores e do engjamento foi dividido por 100, ou seja, no gŕáfico onde é possível visualizar 1000 significa que o valor real desse número é 1 milhão.Então é possível perceber que deputados com um número de seguidores próximo a 100 mil possuem um engajamento total próximo ao seu número de seguidores.
+O congressista com o maior valor de engajamento total em relação ao seu número de seguidores é a deputada Carla Zambelli(PSL-SP). Já o parlementar que possui a menor proporção de engajamento total por seguidor é o senador Romário Fária(PODEMOS-RJ).
+
+```{r}
 validos %>%
   ggplot(aes(x = seguidores/1000, y =engaj_total_proprio/1000, colour=seguidores)) +
     geom_text(check_overlap = TRUE,aes(label =ifelse(seguidores>1000,as.character(nome_eleitoral),''))
               ,hjust=.1,vjust=0.4)
 
-                 
 ```
-Para efeitos de visualização o número de seguidores e do engjamento foi dividido por 100, ou seja, no gŕáfico onde é possível visualizar 1000 significa que o valor real desse número é 1 milhão.Então é possível perceber que deputados com um número de seguidores próximo a 100 mil possuem um engajamento total próximo ao seu número de seguidores.
-O congressista com o maior valor de engajamento total em relação ao seu número de seguidores é a deputada Carla Zambelli(PSL-SP). Já o parlementar que possui a menor proporção de engajamento total por seguidor é o senador Romário Fária(PODEMOS-RJ).
+Se levarmos em consideração o engajamento total próprio o panaroma geral não sofre grande alteração. A deputada Carla Zambelli continua no topo, mas se levaramos em consideração o engajamento mediano percebe-se que a deputada não configura no gráfico, utilzar a mediana é uma boa medida para avaliar as distribuições pois ela ignora os valores extremos que é o caso da deputada Zambelli.
+
+
 
 #Qual o deputado com mais seguidores com maior enjamento mediano ? E engajamento mediano propŕio ?
 
@@ -56,19 +61,16 @@ validos %>%
               ,hjust=.1,vjust=0.4)
   
 ```
-Se levarmos em consideração o engajamento total próprio o panaroma geral não sofre grande alteração. A deputada Carla Zambelli continua no topo, mas se levaramos em consideração o engajamento mediano percebe-se que a deputada não configura no gráfico, o que prova que realmente a deputada é um outlier.
-Considerando o mesmo engajamento mediano, percebe-se que o senador Flávio Bolsonaro(PSL-RJ), 
-Já o maior engajamento media próprio 
 
 #A quais estados pertencem os congressistas com os maiores engajamentos nos seus tweets ?
 ```{r}
 validos %>%
   group_by(UF) %>%
-  summarise(mediana_seguidores = median(engaj_total),
+  summarise(mediana_engajamento = median(engaj_total),
             parlamentares = n()) %>%
   ggplot(aes(
-    x = reorder(UF, mediana_seguidores),
-    y = mediana_seguidores,
+    x = reorder(UF, mediana_engajamento),
+    y = mediana_engajamento,
     size = parlamentares
   )) +
   geom_point(alpha = .8) +
@@ -77,5 +79,22 @@ validos %>%
        y = "Mediana de engajamento total dos parlamentares", 
        size = "Ativos no twitter")
 ```
+
+Segundo o gráfico o estado que possui o maior engajamento mediano dos seus parlamentares é o Amapá. Já os estados que possuem um número elevado de congressistas no Twitter, o que possui o maior engajamento é o Rio de Janeiro.
+
+#Por que o Amapá possui engajamento mediano tão elevado ?
+O estado do Amapá possui poucos parlamentares, 3 deputados e 3 senadores. Então por qual motivo esse estado possui em engajamento médio tão elevado ?
+```{r}
+validos %>% 
+  filter(!is.na(engaj_mediano), UF == "AP") %>% 
+  ggplot(aes(x = nome_eleitoral, y = engaj_mediano)) + 
+  geom_col() + 
+  coord_flip()
+```
+O engajamento mediano do Amapá sofre uma grande distorção devido ao senador Davi Alcolumbre, que é o presidente do senado. 
+
+
+
+
 
 
