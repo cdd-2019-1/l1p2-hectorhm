@@ -1,0 +1,101 @@
+---
+title: "correlacoes"
+author: "Hector Medeiros"
+date: "22 de abril de 2019"
+output:
+    html_document:
+    df_print: paged
+theme: sandstone
+---
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+source(here::here("code/lib.R"))
+theme_set(theme_bw())
+```
+
+```{r read}
+atividade = read_projectdata()
+
+
+validos = atividade %>%
+          filter(!is.na(twitter),
+                 !is.na(segue),
+                 !is.na(seguidores))
+```
+
+#Existe correlação entre a quantidade de seguidores e o engajamento total dos parlamentares ?
+Consideraremos nesta análise se existe correlação entre as variáveis número de seguidores e engajamento total dos congressistas. Como já fora discutido em questões passadas é sabido que os números diferem muito de um parlamentar para outros em números de seguidores e engajamento. Então ignorando a discrepância entre os pontos, podemos perceber que a correlação levando a escala linear tem a seguinte distruibuição. 
+
+```{r}
+validos %>%
+   ggplot(aes(x = seguidores, y = engaj_total)) + 
+  geom_point() +
+  labs(title = "Distribuição dos seguidores pelo engajamento total",
+             y = "Engajamento", x = "Seguidores")
+  
+```
+Considerando a distribuição utilizando uma escala com log
+```{r}
+validos %>%
+   ggplot(aes(x = seguidores, y = engaj_total)) + 
+  geom_point() +
+  scale_y_log10() + 
+  scale_x_log10() +
+  labs(title = "Distribuição dos seguidores pelo engajamento total",
+             y = "Engajamento Total", x = "Seguidores")
+```
+
+Percebemos que visualmente a correlação entre os pontos é maior se considerarmos a escalar logaritmíca.  
+
+Embasando nos coeficientes de correlação linear, Pearson e Spearman, podemos perceber que as variavéis tendem a mudar juntas mas em uma taxa não constante. 
+
+
+
+```{r}
+validos %>%
+    summarise(pearson = cor(seguidores, engaj_total, method = "pearson"), 
+            spearman = cor(seguidores, engaj_total, method = "spearman"),
+            kendall = cor(seguidores, engaj_total, method = "kendall"))
+```
+
+```{r}
+validos %>%
+    summarise(pearson = cor(log(seguidores), log(engaj_total), method = "pearson"), 
+            spearman = cor(log(seguidores), log(engaj_total), method = "spearman"),
+            kendall = cor(log(seguidores), log(engaj_total), method = "kendall"))
+```
+
+Neste ponto percebemos como os coeficientes de Spearman e Kendall não se alteram em transformações monotónas, já que continuam com os mesmo valores utilizando log. Já nesse caso a distruibuição de Pearson não se aplica.
+
+#A quantidade de engajamento próprio tem correlação com o número de tweets próprio ?
+
+```{r}
+validos %>%  
+  ggplot(aes(x = n_proprio, y = engaj_total_proprio)) + 
+  geom_point(size = 3, alpha = 1) +
+     labs(title = "Distribuição do engajamento total próprio e tweets próprios",
+             x = "Tweets próprios", y = "Engajamento total próprio")
+```
+
+```{r}
+validos %>%  
+  ggplot(aes(x = n_proprio, y = engaj_total_proprio)) + 
+  geom_point(size = 3, alpha = 1) +
+  scale_y_log10() + 
+  scale_x_log10() +
+     labs(title = "Distribuição do engajamento total próprio e tweets próprios",
+             x = "Tweets próprios", y = "Engajamento total próprio")
+```
+
+
+Na primeira imagem percebe-se que a distruibuição(linear) não forma uma nuvem de pontos tão notária quanto a segunda(logarítmica). O melhor índice de correlação para indentificarmos se existe correlação ou não entre as variáveis é o coeficiente de Speraman
+
+O correlação entre as duas variáveis é mediana, 0,74, isso significava que provavelmente a quantidade de likes e retweets muda de acordo de com a quantidade de conteúdo próprio postado, existe uma dependência razoável. Já que a mesma não é sensível a assimetria. 
+O coeficente de Spearman para esse caso é
+```{r}
+validos %>% 
+    summarise(spearman = cor(n_proprio, engaj_total_proprio, method = "spearman"))
+```
+
+Então, pelo coeficiente de Spearman(0.74) que é provavél que essas essas variavéis cresçam juntas.
